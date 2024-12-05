@@ -622,7 +622,7 @@ class AutoNCP(NCP):
             raise ValueError(
                 f"Output size must be less than the number of units-2 (given {units} units, {output_size} output size)"
             )
-        if sparsity_level < 0.1 or sparsity_level > 1.0:
+        if sparsity_level < 0.0 or sparsity_level > 1.0:
             raise ValueError(
                 f"Sparsity level must be between 0.0 and 0.9 (given {sparsity_level})"
             )
