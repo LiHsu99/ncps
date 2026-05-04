@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#f3efe4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="计时提醒" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <title>计时提醒</title>
+    <style>
+      :root {
+        --bg-1: #f7f4ea;
+        --bg-2: #dbe7d8;
+        --card: rgba(255, 255, 255, 0.84);
+        --text: #193229;
+        --muted: #4f6b61;
+        --accent: #1d7a5f;
+        --accent-dark: #145a45;
+        --danger: #9f3d35;
+        --shadow: 0 18px 60px rgba(25, 50, 41, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.75), transparent 32%),
+          linear-gradient(160deg, var(--bg-1), var(--bg-2));
+        display: grid;
+        place-items: center;
+        padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      }
+
+      .card {
+        width: min(100%, 420px);
+        background: var(--card);
+        backdrop-filter: blur(18px);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 22px 18px 18px;
+      }
+
+      .app-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.75);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 14px;
+      }
+
+      .badge-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 5px rgba(29, 122, 95, 0.12);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 30px;
+        line-height: 1.1;
+      }
+
+      .subtext {
+        margin: 0 0 24px;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .status {
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: rgba(29, 122, 95, 0.1);
+        margin-bottom: 18px;
+      }
+
+      .status-label {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .status-value {
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .timer {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .panel {
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.65);
+        margin-bottom: 18px;
+      }
+
+      .panel-title {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .mode-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .mode-card {
+        border: 2px solid transparent;
+        border-radius: 18px;
+        padding: 14px 12px;
+        background: rgba(248, 249, 244, 0.95);
+        cursor: pointer;
+      }
+
+      .mode-card.active {
+        border-color: var(--accent);
+        background: rgba(232, 241, 235, 0.98);
+      }
+
+      .mode-name {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .mode-desc {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .chip {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--text);
+      }
+
+      .chip.active {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .input-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .minutes-input {
+        width: 100%;
+        border: 0;
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 16px;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      .input-unit {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .buttons {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 18px;
+        padding: 15px 16px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .start {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .start:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .stop {
+        background: rgba(159, 61, 53, 0.12);
+        color: var(--danger);
+      }
+
+      .notes {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 14px;
+      }
+
+      .notes li + li {
+        margin-top: 6px;
+      }
+
+      .save-panel {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .save-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .save-text {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 14px;
+      }
+
+      .bottom-bar {
+        position: sticky;
+        bottom: 0;
+        margin-top: 18px;
+        padding-top: 8px;
+        background: linear-gradient(to top, rgba(247, 244, 234, 0.96), rgba(247, 244, 234, 0));
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="app-badge">
+        <span class="badge-dot"></span>
+        <span>可保存到手机桌面</span>
+      </div>
+
+      <h1>计时提醒</h1>
+      <p class="subtext">这是目前最简单的用法：直接在手机浏览器里打开，设置分钟数后开始计时。</p>
+
+      <section class="panel">
+        <div class="panel-title">提醒模式</div>
+        <div class="mode-grid">
+          <button class="mode-card active" id="singleMode" type="button">
+            <div class="mode-name">单次计时</div>
+            <div class="mode-desc">时间到后响一次并停止。</div>
+          </button>
+          <button class="mode-card" id="repeatMode" type="button">
+            <div class="mode-name">连续循环</div>
+            <div class="mode-desc">时间到后响一次，再自动开始下一轮。</div>
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">提醒时长</div>
+        <div class="presets">
+          <button class="chip active" data-minutes="1" type="button">1 分钟</button>
+          <button class="chip" data-minutes="2" type="button">2 分钟</button>
+          <button class="chip" data-minutes="5" type="button">5 分钟</button>
+          <button class="chip" data-minutes="10" type="button">10 分钟</button>
+        </div>
+        <div class="input-row">
+          <input class="minutes-input" id="minutesInput" type="number" min="1" step="1" value="1" />
+          <span class="input-unit">分钟</span>
+        </div>
+      </section>
+
+      <section class="status">
+        <div class="status-label">当前状态</div>
+        <div class="status-value" id="statusText">未启动</div>
+      </section>
+
+      <section class="status">
+        <div class="status-label">距离下次提醒</div>
+        <div class="status-value timer" id="countdown">01:00</div>
+      </section>
+
+      <div class="bottom-bar">
+        <div class="buttons">
+          <button class="start" id="startButton">开始计时</button>
+          <button class="stop" id="stopButton">停止</button>
+        </div>
+      </div>
+
+      <ul class="notes">
+        <li>iPhone 和大多数安卓浏览器都要求你先手动点一次“开始提醒”才能播放声音。</li>
+        <li>如果把页面切到后台或锁屏，浏览器可能会暂停定时器，这是手机系统限制。</li>
+        <li>如果你现在只是想先用起来，这是比 Android Studio 和小程序都更轻量的办法。</li>
+      </ul>
+
+      <section class="save-panel">
+        <div class="save-title">保存到桌面</div>
+        <p class="save-text">在小米手机浏览器里点菜单，然后选择“添加到桌面”或“安装到主屏幕”。以后你点桌面图标就能更快打开它。</p>
+      </section>
+    </main>
+
+    <script>
+      const statusText = document.getElementById("statusText");
+      const countdown = document.getElementById("countdown");
+      const startButton = document.getElementById("startButton");
+      const stopButton = document.getElementById("stopButton");
+      const singleMode = document.getElementById("singleMode");
+      const repeatMode = document.getElementById("repeatMode");
+      const minutesInput = document.getElementById("minutesInput");
+      const chips = Array.from(document.querySelectorAll(".chip"));
+
+      let countdownTimer = null;
+      let remindTimer = null;
+      let nextRingAt = null;
+      let audioContext = null;
+      let mode = "single";
+
+      function formatTime(ms) {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function sanitizeMinutes(value) {
+        const parsed = Number.parseInt(value, 10);
+
+        if (Number.isNaN(parsed) || parsed < 1) {
+          return 1;
+        }
+
+        return Math.min(parsed, 999);
+      }
+
+      function getIntervalMs() {
+        return sanitizeMinutes(minutesInput.value) * 60_000;
+      }
+
+      function refreshChipState() {
+        const minutes = String(sanitizeMinutes(minutesInput.value));
+
+        chips.forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.minutes === minutes);
+        });
+      }
+
+      function refreshModeState() {
+        singleMode.classList.toggle("active", mode === "single");
+        repeatMode.classList.toggle("active", mode === "repeat");
+      }
+
+      function updateCountdown() {
+        if (!nextRingAt) {
+          countdown.textContent = formatTime(getIntervalMs());
+          return;
+        }
+
+        const left = nextRingAt - Date.now();
+        countdown.textContent = formatTime(left);
+      }
+
+      function vibrate() {
+        if (navigator.vibrate) {
+          navigator.vibrate([250, 120, 250]);
+        }
+      }
+
+      function playBeep() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (audioContext.state === "suspended") {
+          audioContext.resume();
+        }
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = 880;
+        gainNode.gain.value = 0.12;
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        const now = audioContext.currentTime;
+        oscillator.start(now);
+        oscillator.stop(now + 0.45);
+      }
+
+      function ring() {
+        playBeep();
+        vibrate();
+
+        if (mode === "repeat") {
+          nextRingAt = Date.now() + getIntervalMs();
+          statusText.textContent = `已提醒 ${new Date().toLocaleTimeString()}，继续下一轮`;
+          updateCountdown();
+          return;
+        }
+
+        stopReminder(`单次计时结束 ${new Date().toLocaleTimeString()}`);
+      }
+
+      function stopReminder(customText = "已停止") {
+        if (countdownTimer) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+
+        if (remindTimer) {
+          clearTimeout(remindTimer);
+          clearInterval(remindTimer);
+          remindTimer = null;
+        }
+
+        nextRingAt = null;
+        statusText.textContent = customText;
+        countdown.textContent = formatTime(getIntervalMs());
+        startButton.disabled = false;
+        minutesInput.disabled = false;
+        chips.forEach((chip) => {
+          chip.disabled = false;
+        });
+        singleMode.disabled = false;
+        repeatMode.disabled = false;
+      }
+
+      function startReminder() {
+        const intervalMs = getIntervalMs();
+        const minutes = sanitizeMinutes(minutesInput.value);
+
+        stopReminder();
+        startButton.disabled = true;
+        minutesInput.disabled = true;
+        chips.forEach((chip) => {
+          chip.disabled = true;
+        });
+        singleMode.disabled = true;
+        repeatMode.disabled = true;
+        statusText.textContent = mode === "single" ? `${minutes} 分钟单次计时中` : `${minutes} 分钟连续计时中`;
+        nextRingAt = Date.now() + intervalMs;
+        updateCountdown();
+
+        countdownTimer = setInterval(updateCountdown, 250);
+
+        if (mode === "single") {
+          remindTimer = setTimeout(ring, intervalMs);
+          return;
+        }
+
+        remindTimer = setInterval(ring, intervalMs);
+      }
+
+      singleMode.addEventListener("click", () => {
+        mode = "single";
+        refreshModeState();
+      });
+
+      repeatMode.addEventListener("click", () => {
+        mode = "repeat";
+        refreshModeState();
+      });
+
+      chips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          minutesInput.value = chip.dataset.minutes;
+          refreshChipState();
+          updateCountdown();
+        });
+      });
+
+      minutesInput.addEventListener("input", () => {
+        refreshChipState();
+        updateCountdown();
+      });
+
+      startButton.addEventListener("click", startReminder);
+      stopButton.addEventListener("click", stopReminder);
+
+      refreshModeState();
+      refreshChipState();
+      updateCountdown();
+    </script>
+  </body>
+  </html>
