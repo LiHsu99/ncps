@@ -1,0 +1,17 @@
+{
+  "name": "计时提醒",
+  "short_name": "计时提醒",
+  "description": "支持自定义分钟数的单次与连续循环计时提醒。",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f4ea",
+  "theme_color": "#f3efe4",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
